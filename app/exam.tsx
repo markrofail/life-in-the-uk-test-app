@@ -1,14 +1,18 @@
 import { useExamStore } from '@/stores/useExamStore';
 import { Question } from '@/types';
 import { getRandomExamQuestions } from '@/utils/examUtils';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ExamScreen() {
     const router = useRouter();
+    const { mode } = useLocalSearchParams();
+
     const recordExamResult = useExamStore((state) => state.recordExamResult);
+    const incorrectQuestionIds = useExamStore((state) => state.incorrectQuestionIds);
+    const correctQuestionIds = useExamStore((state) => state.correctQuestionIds);
 
     const [questions, setQuestions] = useState<Question[]>([]);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -21,11 +25,16 @@ export default function ExamScreen() {
     const [answersStatus, setAnswersStatus] = useState<Record<string, boolean>>({});
 
     // Has the user submitted the answer for the current question?
-    const [isRevealed, setIsRevealed] = useState(false);
+    const [isRevealed, setIsRevealed] = useState(mode === 'review');
 
     useEffect(() => {
-        // Generate a fresh set of 24 questions on mount
-        setQuestions(getRandomExamQuestions(24));
+        // Generate a fresh set of questions on mount based on prioritization mode
+        const isReviewMode = mode === 'review';
+        setQuestions(getRandomExamQuestions(24, {
+            incorrectIds: incorrectQuestionIds,
+            correctIds: correctQuestionIds,
+            onlyIncorrect: isReviewMode,
+        }));
     }, []);
 
     if (questions.length === 0) {
@@ -77,13 +86,19 @@ export default function ExamScreen() {
         if (currentIndex < questions.length - 1) {
             setCurrentIndex(currentIndex + 1);
             setSelectedOptions([]);
-            setIsRevealed(false);
+            setIsRevealed(mode === 'review');
         } else {
             handleFinishExam();
         }
     };
 
     const handleFinishExam = () => {
+        if (mode === 'review') {
+            // Dry mode: do not alter stats, just go back to the dashboard
+            router.replace('/(tabs)');
+            return;
+        }
+
         const correctIds: string[] = [];
         const incorrectIds: string[] = [];
 
