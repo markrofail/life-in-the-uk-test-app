@@ -1,122 +1,92 @@
 import { IncorrectQuestionsList } from '@/components/IncorrectQuestionsList';
-import questionBankData from '@/data/question_bank.json';
-import { Question } from '@/types';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React from 'react';
+import { PieChart } from '@/components/PieChart';
+import { AppConfig } from '@/constants/config';
+import { Colors } from '@/constants/theme';
+import { useExamStore } from '@/stores/useExamStore';
+import { getQuestionsByIds } from '@/utils/examUtils';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, G, Text as SvgText } from 'react-native-svg';
 
 export default function ResultScreen() {
     const router = useRouter();
-    const { score, total, incorrectIds } = useLocalSearchParams();
+    const lastExamResult = useExamStore((state) => state.lastExamResult);
 
-    const numScore = Number(score) || 0;
-    const numTotal = Number(total) || 24;
+    useEffect(() => {
+        if (!lastExamResult) {
+            router.replace('/');
+        }
+    }, [lastExamResult, router]);
+
+    if (!lastExamResult) return null;
+
+    const { score: numScore, total: numTotal, incorrectIds } = lastExamResult;
 
     const percentage = Math.round((numScore / numTotal) * 100);
-    // Life in the UK passes at ~75% (18/24)
-    const isPass = numScore >= 18;
+    const isPass = percentage >= AppConfig.PASSING_PERCENTAGE;
 
-    let parsedIncorrectIds: string[] = [];
-    if (incorrectIds) {
-        try {
-            parsedIncorrectIds = JSON.parse(incorrectIds as string);
-        } catch (e) {
-            console.error("Failed to parse incorrectIds", e);
-        }
-    }
+    const incorrectQuestions = getQuestionsByIds(incorrectIds);
 
-    const incorrectQuestions = (questionBankData as Question[]).filter(q =>
-        parsedIncorrectIds.includes(q.id)
+    const pieChartData = useMemo(() => [
+        { label: 'Correct', value: numScore, color: isPass ? Colors.success : Colors.error },
+        { label: 'Incorrect', value: numTotal - numScore, color: Colors.border }
+    ], [numScore, numTotal, isPass]);
+
+    const headerNode = (
+        <View style={styles.card}>
+            <Text style={styles.title}>Exam Completed</Text>
+
+            <View style={styles.gaugeContainer}>
+                <PieChart
+                    data={pieChartData}
+                    totalValue={numTotal}
+                    radius={80}
+                    strokeWidth={16}
+                    centerLabel={`${numScore}/${numTotal}`}
+                    centerSubLabel={`${percentage}%`}
+                    showLegend={false}
+                />
+            </View>
+
+            <Text style={[styles.statusText, isPass ? styles.statusPass : styles.statusFail]}>
+                {isPass ? 'Pass' : 'Failed'}
+            </Text>
+
+            <Text style={styles.messageText}>
+                {isPass
+                    ? 'Great job! Keep up the good work to ensure you are ready for the real test.'
+                    : `You need at least ${AppConfig.PASSING_PERCENTAGE}% correct answers to pass. Review your mistakes and try again!`}
+            </Text>
+        </View>
     );
 
-    // SVG Gauge Variables
-    const radius = 80; // slightly larger than the dashboard gauge
-    const strokeWidth = 16;
-    const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+    const footerNode = (
+        <TouchableOpacity
+            style={styles.homeButton}
+            onPress={() => router.replace('/')}
+            activeOpacity={0.8}
+        >
+            <Text style={styles.homeButtonText}>Return to Dashboard</Text>
+        </TouchableOpacity>
+    );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.card}>
-                    <Text style={styles.title}>Exam Completed</Text>
-
-                    <View style={styles.gaugeContainer}>
-                        <Svg height="200" width="200" viewBox="0 0 200 200">
-                            <G rotation="-90" origin="100, 100">
-                                {/* Background Circle */}
-                                <Circle
-                                    cx="100"
-                                    cy="100"
-                                    r={radius}
-                                    stroke="#333333"
-                                    strokeWidth={strokeWidth}
-                                    fill="transparent"
-                                />
-                                {/* Foreground Progress Circle */}
-                                <Circle
-                                    cx="100"
-                                    cy="100"
-                                    r={radius}
-                                    stroke={isPass ? "#68D391" : "#FC8181"} // Green if pass, Red if fail
-                                    strokeWidth={strokeWidth}
-                                    fill="transparent"
-                                    strokeDasharray={circumference}
-                                    strokeDashoffset={strokeDashoffset}
-                                    strokeLinecap="round"
-                                />
-                            </G>
-                            {/* Center Text */}
-                            <SvgText
-                                x="100"
-                                y="90"
-                                textAnchor="middle"
-                                alignmentBaseline="central"
-                                fontSize="36"
-                                fontWeight="bold"
-                                fill="#E2E8F0"
-                            >
-                                {`${numScore}/${numTotal}`}
-                            </SvgText>
-                            <SvgText
-                                x="100"
-                                y="125"
-                                textAnchor="middle"
-                                alignmentBaseline="central"
-                                fontSize="20"
-                                fill="#A0AEC0"
-                                fontWeight="bold"
-                            >
-                                {`${percentage}%`}
-                            </SvgText>
-                        </Svg>
-                    </View>
-
-                    <Text style={[styles.statusText, isPass ? styles.statusPass : styles.statusFail]}>
-                        {isPass ? 'Pass' : 'Failed'}
-                    </Text>
-
-                    <Text style={styles.messageText}>
-                        {isPass
-                            ? 'Great job! Keep up the good work to ensure you are ready for the real test.'
-                            : 'You need at least 18 correct answers to pass. Review your mistakes and try again!'}
-                    </Text>
-                </View>
-
-                {incorrectQuestions.length > 0 && (
-                    <IncorrectQuestionsList questions={incorrectQuestions} />
+        <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+            <View style={styles.scrollContent}>
+                {incorrectQuestions.length > 0 ? (
+                    <IncorrectQuestionsList
+                        questions={incorrectQuestions}
+                        headerComponent={headerNode}
+                        footerComponent={footerNode}
+                    />
+                ) : (
+                    <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                        {headerNode}
+                        {footerNode}
+                    </ScrollView>
                 )}
-
-                <TouchableOpacity
-                    style={styles.homeButton}
-                    onPress={() => router.replace('/')}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.homeButtonText}>Return to Dashboard</Text>
-                </TouchableOpacity>
-            </ScrollView>
+            </View>
         </SafeAreaView>
     );
 }
@@ -124,14 +94,14 @@ export default function ResultScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212',
+        backgroundColor: Colors.background,
     },
     scrollContent: {
         padding: 24,
         paddingBottom: 40,
     },
     card: {
-        backgroundColor: '#1E1E1E',
+        backgroundColor: Colors.cardBackground,
         borderRadius: 20,
         padding: 32,
         alignItems: 'center',
@@ -145,7 +115,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: '800',
-        color: '#E2E8F0',
+        color: Colors.textMain,
         marginBottom: 32,
     },
     gaugeContainer: {
@@ -159,19 +129,19 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     statusPass: {
-        color: '#68D391',
+        color: Colors.success,
     },
     statusFail: {
-        color: '#FC8181',
+        color: Colors.error,
     },
     messageText: {
         fontSize: 16,
-        color: '#A0AEC0',
+        color: Colors.textMuted,
         textAlign: 'center',
         lineHeight: 24,
     },
     homeButton: {
-        backgroundColor: '#3182CE',
+        backgroundColor: Colors.primary,
         paddingVertical: 18,
         borderRadius: 16,
         alignItems: 'center',

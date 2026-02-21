@@ -1,7 +1,15 @@
+import { AppConfig } from '@/constants/config';
 import questionBankData from '../data/question_bank.json';
 import { Question, QuestionBank } from '../types';
 
 const questionBank: QuestionBank = questionBankData as QuestionBank;
+
+export const getTotalQuestionCount = (): number => questionBank.length;
+
+export const getQuestionsByIds = (ids: string[]): Question[] => {
+    const idSet = new Set(ids);
+    return questionBank.filter(q => idSet.has(q.id));
+};
 
 /**
  * Shuffles an array in place using the Fisher-Yates algorithm.
@@ -24,7 +32,7 @@ interface ExamConfig {
 /**
  * Returns a random sample of `count` questions from the question bank.
  */
-export function getRandomExamQuestions(count: number = 24, config?: ExamConfig): Question[] {
+export function getRandomExamQuestions(count: number = AppConfig.EXAM_QUESTION_COUNT, config?: ExamConfig): Question[] {
     if (config?.onlyIncorrect) {
         let pool = questionBank.filter(q => config.incorrectIds.includes(q.id));
         const shuffled = shuffle(pool);

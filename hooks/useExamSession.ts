@@ -1,5 +1,5 @@
 import { Question } from '@/types';
-import { useReducer } from 'react';
+import { useCallback, useReducer } from 'react';
 
 // Define the state shape for the exam session
 interface ExamSessionState {
@@ -101,17 +101,17 @@ const initialState: ExamSessionState = {
 export function useExamSession() {
     const [state, dispatch] = useReducer(examSessionReducer, initialState);
 
-    const initializeExam = (questions: Question[]) => {
+    const initializeExam = useCallback((questions: Question[]) => {
         dispatch({ type: 'INITIALIZE', payload: questions });
-    };
+    }, []);
 
-    const toggleOption = (optionId: string, isMultipleChoice: boolean) => {
+    const toggleOption = useCallback((optionId: string, isMultipleChoice: boolean) => {
         dispatch({ type: 'TOGGLE_OPTION', payload: { optionId, isMultipleChoice } });
-    };
+    }, []);
 
-    const nextQuestion = () => {
+    const nextQuestion = useCallback(() => {
         dispatch({ type: 'NEXT_QUESTION' });
-    };
+    }, []);
 
     const currentQuestion = state.questions.length > 0 ? state.questions[state.currentIndex] : null;
 

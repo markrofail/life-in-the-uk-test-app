@@ -1,22 +1,29 @@
-import { BankMasteryGauge } from '@/components/BankMasteryGauge';
-import questionBankData from '@/data/question_bank.json';
+import { PieChart } from '@/components/PieChart';
+import { Colors } from '@/constants/theme';
 import { useExamStore } from '@/stores/useExamStore';
+import { getTotalQuestionCount } from '@/utils/examUtils';
 import { useRouter } from 'expo-router';
+import React, { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const TOTAL_QUESTION_BANK_SIZE = questionBankData.length;
+const TOTAL_QUESTION_BANK_SIZE = getTotalQuestionCount();
 
 export default function HomeScreen() {
   const router = useRouter();
-  const {
-    incorrectQuestionIds,
-    correctQuestionIds,
-    resetStats
-  } = useExamStore();
+  const incorrectQuestionIds = useExamStore((state) => state.incorrectQuestionIds);
+  const correctQuestionIds = useExamStore((state) => state.correctQuestionIds);
+  const resetStats = useExamStore((state) => state.resetStats);
 
   const correctCount = correctQuestionIds.length;
   const incorrectCount = incorrectQuestionIds.length;
+  const unansweredCount = TOTAL_QUESTION_BANK_SIZE - correctCount - incorrectCount;
+
+  const pieChartData = useMemo(() => [
+    { label: 'Correct', value: correctCount, color: '#68D391' },
+    { label: 'Incorrect', value: incorrectCount, color: '#FC8181' },
+    { label: 'Unseen', value: unansweredCount, color: '#333333' }
+  ], [correctCount, incorrectCount, unansweredCount]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -24,10 +31,13 @@ export default function HomeScreen() {
       <Text style={styles.subtitle}>Study Guide & Exam</Text>
 
       <View style={styles.statsCard}>
-        <BankMasteryGauge
-          correctCount={correctCount}
-          incorrectCount={incorrectCount}
-          totalQuestions={TOTAL_QUESTION_BANK_SIZE}
+        <PieChart
+          data={pieChartData}
+          totalValue={TOTAL_QUESTION_BANK_SIZE}
+          radius={60}
+          strokeWidth={14}
+          centerLabel={correctCount}
+          centerSubLabel="Mastered"
         />
       </View>
 
@@ -62,25 +72,25 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212', // Dark background
+    backgroundColor: Colors.background,
     padding: 24,
     justifyContent: 'center',
   },
   title: {
     fontSize: 32,
     fontWeight: '800',
-    color: '#E2E8F0', // Light text
+    color: Colors.textMain,
     textAlign: 'center',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 18,
-    color: '#A0AEC0', // Subtle light text
+    color: Colors.textMuted,
     textAlign: 'center',
     marginBottom: 40,
   },
   statsCard: {
-    backgroundColor: '#1E1E1E', // Darker card background
+    backgroundColor: Colors.cardBackground,
     borderRadius: 16,
     padding: 24,
     shadowColor: '#000',
@@ -93,13 +103,13 @@ const styles = StyleSheet.create({
   statsTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#E2E8F0',
+    color: Colors.textMain,
     marginBottom: 16,
     textAlign: 'center',
   },
   statsDivider: {
     height: 1,
-    backgroundColor: '#333333',
+    backgroundColor: Colors.border,
     marginVertical: 16,
   },
   statRow: {
@@ -109,16 +119,16 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 16,
-    color: '#A0AEC0',
+    color: Colors.textMuted,
     flex: 1,
   },
   statValue: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#63B3ED', // Brighter blue for dark mode
+    color: Colors.primaryLight,
   },
   startButton: {
-    backgroundColor: '#3182CE',
+    backgroundColor: Colors.primary,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -130,7 +140,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   reviewButton: {
-    backgroundColor: '#9B2C2C', // Dark red
+    backgroundColor: '#9B2C2C', // Used specifically here
   },
   startButtonText: {
     color: '#FFFFFF',
@@ -142,7 +152,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resetButtonText: {
-    color: '#FC8181', // Brighter red for dark mode
+    color: Colors.error,
     fontSize: 16,
     fontWeight: '600',
   }

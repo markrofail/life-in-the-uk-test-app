@@ -1,7 +1,10 @@
+import { QuestionCard } from '@/components/QuestionCard';
+import { AppConfig } from '@/constants/config';
+import { Colors } from '@/constants/theme';
 import { useExamSession } from '@/hooks/useExamSession';
 import { useExamStore } from '@/stores/useExamStore';
 import { getRandomExamQuestions } from '@/utils/examUtils';
-import { useRouter } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -32,44 +35,29 @@ export default function ExamScreen() {
 
     useEffect(() => {
         // Generate a fresh set of questions on mount
-        initializeExam(getRandomExamQuestions(24, {
+        initializeExam(getRandomExamQuestions(AppConfig.EXAM_QUESTION_COUNT, {
             incorrectIds: incorrectQuestionIds,
             correctIds: correctQuestionIds,
         }));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        // This effect runs only once on mount to start the exam session
     }, []);
 
     // Effect to handle finish condition outside of render
     useEffect(() => {
         if (isFinished && questions.length > 0) {
             recordExamResult(currentCorrectIds, currentIncorrectIds);
-
-            router.replace({
-                pathname: '/result',
-                params: {
-                    score: currentCorrectIds.length,
-                    total: questions.length,
-                    incorrectIds: JSON.stringify(currentIncorrectIds)
-                }
-            });
+            router.replace('/result');
         }
     }, [isFinished]);
 
     if (!currentQuestion || questions.length === 0) {
         return (
-            <SafeAreaView style={styles.centerContainer}>
+            <SafeAreaView style={styles.centerContainer} edges={['bottom', 'left', 'right']}>
+                <Stack.Screen options={{ title: 'Loading...' }} />
                 <Text>Loading Exam...</Text>
             </SafeAreaView>
         );
     }
-
-    // Determine if multiple answers are expected
-    const isMultipleChoice = currentQuestion.correctAnswers.length > 1;
-
-    const getOptionStyle = (optionId: string) => {
-        const isSelected = selectedOptions.includes(optionId);
-        return isSelected ? styles.optionSelected : styles.optionDefault;
-    };
 
     const handleQuit = () => {
         Alert.alert(
@@ -83,43 +71,24 @@ export default function ExamScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={handleQuit}>
-                    <Text style={styles.quitText}>Quit</Text>
-                </TouchableOpacity>
-                <Text style={styles.progressText}>
-                    Question {currentIndex + 1} of {questions.length}
-                </Text>
-            </View>
+        <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+            <Stack.Screen
+                options={{
+                    title: `Question ${currentIndex + 1} of ${questions.length}`,
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={handleQuit}>
+                            <Text style={styles.quitText}>Quit</Text>
+                        </TouchableOpacity>
+                    ),
+                }}
+            />
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.questionText}>{currentQuestion.question}</Text>
-
-                {isMultipleChoice && (
-                    <Text style={styles.instructionText}>
-                        (Select {currentQuestion.correctAnswers.length} answers)
-                    </Text>
-                )}
-
-                <View style={styles.optionsContainer}>
-                    {currentQuestion.options.map((option) => (
-                        <TouchableOpacity
-                            key={option.id}
-                            style={[styles.optionButton, getOptionStyle(option.id)]}
-                            onPress={() => toggleOption(option.id, isMultipleChoice)}
-                            activeOpacity={0.7}
-                        >
-                            <Text style={[
-                                styles.optionText,
-                                selectedOptions.includes(option.id) ? styles.optionTextSelected : null
-                            ]}>
-                                {option.text}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
+                <QuestionCard
+                    question={currentQuestion}
+                    selectedOptions={selectedOptions}
+                    onOptionToggle={toggleOption}
+                />
             </ScrollView>
 
             {/* Bottom Action Area */}
@@ -143,84 +112,29 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#121212',
+        backgroundColor: Colors.background,
     },
     container: {
         flex: 1,
-        backgroundColor: '#121212',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#333333',
-        backgroundColor: '#1A1A1A',
+        backgroundColor: Colors.background,
     },
     quitText: {
-        color: '#FC8181',
+        color: Colors.error,
         fontSize: 16,
         fontWeight: '600',
-    },
-    progressText: {
-        fontSize: 16,
-        fontWeight: '600',
-        color: '#A0AEC0',
     },
     scrollContent: {
         padding: 24,
         paddingBottom: 40,
     },
-    questionText: {
-        fontSize: 22,
-        fontWeight: '700',
-        color: '#E2E8F0',
-        marginBottom: 8,
-        lineHeight: 30,
-    },
-    instructionText: {
-        fontSize: 14,
-        color: '#A0AEC0',
-        marginBottom: 24,
-        fontStyle: 'italic',
-    },
-    optionsContainer: {
-        gap: 12,
-    },
-    optionButton: {
-        padding: 16,
-        borderRadius: 12,
-        borderWidth: 2,
-        minHeight: 60,
-        justifyContent: 'center',
-    },
-    optionDefault: {
-        backgroundColor: '#1E1E1E',
-        borderColor: '#333333',
-    },
-    optionSelected: {
-        backgroundColor: '#2C5282',
-        borderColor: '#63B3ED',
-    },
-    optionText: {
-        fontSize: 16,
-        color: '#E2E8F0',
-        lineHeight: 22,
-    },
-    optionTextSelected: {
-        color: '#EBF8FF',
-        fontWeight: '600',
-    },
     bottomBar: {
         padding: 20,
-        backgroundColor: '#1A1A1A',
+        backgroundColor: Colors.navBar,
         borderTopWidth: 1,
-        borderTopColor: '#333333',
+        borderTopColor: Colors.border,
     },
     actionButton: {
-        backgroundColor: '#3182CE',
+        backgroundColor: Colors.primary,
         paddingVertical: 16,
         borderRadius: 12,
         alignItems: 'center',

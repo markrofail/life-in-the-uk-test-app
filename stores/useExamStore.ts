@@ -2,6 +2,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+interface ExamResultSummary {
+    score: number;
+    total: number;
+    incorrectIds: string[];
+}
+
 interface ExamStoreState {
     totalAttempts: number;
     totalQuestionsAnswered: number;
@@ -14,6 +20,9 @@ interface ExamStoreState {
     // Track total unique correctly answered questions to calculate percentage 
     // of the total 1198+ questions in the bank.
     correctQuestionIds: string[];
+
+    // Store the result of the most recently taken exam
+    lastExamResult: ExamResultSummary | null;
 
     // Actions
     recordExamResult: (
@@ -31,6 +40,7 @@ export const useExamStore = create<ExamStoreState>()(
             totalCorrectAnswers: 0,
             incorrectQuestionIds: [],
             correctQuestionIds: [],
+            lastExamResult: null,
 
             recordExamResult: (correctQuestions, incorrectQuestions) => set((state) => {
                 const newIncorrectSet = new Set(state.incorrectQuestionIds);
@@ -48,6 +58,11 @@ export const useExamStore = create<ExamStoreState>()(
                     totalCorrectAnswers: state.totalCorrectAnswers + correctQuestions.length,
                     incorrectQuestionIds: Array.from(newIncorrectSet),
                     correctQuestionIds: Array.from(newCorrectSet),
+                    lastExamResult: {
+                        score: correctQuestions.length,
+                        total: correctQuestions.length + incorrectQuestions.length,
+                        incorrectIds: incorrectQuestions
+                    }
                 };
             }),
 
@@ -57,10 +72,11 @@ export const useExamStore = create<ExamStoreState>()(
                 totalCorrectAnswers: 0,
                 incorrectQuestionIds: [],
                 correctQuestionIds: [],
+                lastExamResult: null,
             })
         }),
         {
-            name: 'life-in-ul-exam-storage',
+            name: 'life-in-uk-exam-storage',
             storage: createJSONStorage(() => AsyncStorage),
         }
     )

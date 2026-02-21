@@ -1,3 +1,4 @@
+import { Colors } from '@/constants/theme';
 import { DarkTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -8,11 +9,19 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={DarkTheme}>
-      <Stack>
+      <Stack
+        screenOptions={{
+          headerStyle: { backgroundColor: Colors.navBar },
+          headerTintColor: Colors.textMain,
+          headerTitleStyle: { fontWeight: '700' },
+          headerShadowVisible: false,
+          headerBackVisible: false,
+        }}
+      >
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="exam" options={{ headerShown: false }} />
-        <Stack.Screen name="result" options={{ headerShown: false }} />
-        <Stack.Screen name="review" options={{ headerShown: false }} />
+        <Stack.Screen name="exam" options={{ headerShown: true, headerBackVisible: false }} />
+        <Stack.Screen name="result" options={{ title: 'Results', headerBackVisible: false }} />
+        <Stack.Screen name="review" options={{ title: 'Review Incorrect Questions', headerBackVisible: true, headerBackTitle: 'Back' }} />
       </Stack>
       <StatusBar style="light" />
     </ThemeProvider>
