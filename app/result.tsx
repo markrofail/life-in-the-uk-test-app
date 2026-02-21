@@ -111,7 +111,7 @@ export default function ResultScreen() {
 
                 <TouchableOpacity
                     style={styles.homeButton}
-                    onPress={() => router.replace('/(tabs)')}
+                    onPress={() => router.replace('/')}
                     activeOpacity={0.8}
                 >
                     <Text style={styles.homeButtonText}>Return to Dashboard</Text>
