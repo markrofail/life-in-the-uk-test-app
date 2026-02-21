@@ -39,9 +39,8 @@ export const useExamStore = create<ExamStoreState>()(
                 const newCorrectSet = new Set(state.correctQuestionIds);
                 correctQuestions.forEach(id => newCorrectSet.add(id));
 
-                // If a previously missed question is now correct, we could remove it
-                // from incorrectSet, but usually we just want to know what they've 
-                // ever gotten wrong. Let's keep it simple and just track history.
+                // Remove questions from incorrect list if they were answered correctly
+                correctQuestions.forEach(id => newIncorrectSet.delete(id));
 
                 return {
                     totalAttempts: state.totalAttempts + 1,

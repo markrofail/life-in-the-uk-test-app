@@ -1,43 +1,61 @@
+import { useExamSession } from '@/hooks/useExamSession';
 import { useExamStore } from '@/stores/useExamStore';
-import { Question } from '@/types';
 import { getRandomExamQuestions } from '@/utils/examUtils';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function ExamScreen() {
     const router = useRouter();
-    const { mode } = useLocalSearchParams();
 
     const recordExamResult = useExamStore((state) => state.recordExamResult);
     const incorrectQuestionIds = useExamStore((state) => state.incorrectQuestionIds);
     const correctQuestionIds = useExamStore((state) => state.correctQuestionIds);
 
-    const [questions, setQuestions] = useState<Question[]>([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const {
+        state,
+        currentQuestion,
+        initializeExam,
+        toggleOption,
+        nextQuestion
+    } = useExamSession();
 
-    // Track selected option IDs for the current question
-    const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
-
-    // Track correctness history for summary: 
-    // Map of questionId -> bool
-    const [answersStatus, setAnswersStatus] = useState<Record<string, boolean>>({});
-
-    // Has the user submitted the answer for the current question?
-    const [isRevealed, setIsRevealed] = useState(mode === 'review');
+    const {
+        currentIndex,
+        selectedOptions,
+        questions,
+        isFinished,
+        currentCorrectIds,
+        currentIncorrectIds
+    } = state;
 
     useEffect(() => {
-        // Generate a fresh set of questions on mount based on prioritization mode
-        const isReviewMode = mode === 'review';
-        setQuestions(getRandomExamQuestions(24, {
+        // Generate a fresh set of questions on mount
+        initializeExam(getRandomExamQuestions(24, {
             incorrectIds: incorrectQuestionIds,
             correctIds: correctQuestionIds,
-            onlyIncorrect: isReviewMode,
         }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    if (questions.length === 0) {
+    // Effect to handle finish condition outside of render
+    useEffect(() => {
+        if (isFinished && questions.length > 0) {
+            recordExamResult(currentCorrectIds, currentIncorrectIds);
+
+            router.replace({
+                pathname: '/result',
+                params: {
+                    score: currentCorrectIds.length,
+                    total: questions.length,
+                    incorrectIds: JSON.stringify(currentIncorrectIds)
+                }
+            });
+        }
+    }, [isFinished]);
+
+    if (!currentQuestion || questions.length === 0) {
         return (
             <SafeAreaView style={styles.centerContainer}>
                 <Text>Loading Exam...</Text>
@@ -45,99 +63,12 @@ export default function ExamScreen() {
         );
     }
 
-    const currentQuestion = questions[currentIndex];
     // Determine if multiple answers are expected
     const isMultipleChoice = currentQuestion.correctAnswers.length > 1;
 
-    const toggleOption = (optionId: string) => {
-        if (isRevealed) return; // Disallow changes after reveal
-
-        if (isMultipleChoice) {
-            if (selectedOptions.includes(optionId)) {
-                setSelectedOptions(selectedOptions.filter((id) => id !== optionId));
-            } else {
-                setSelectedOptions([...selectedOptions, optionId]);
-            }
-        } else {
-            setSelectedOptions([optionId]);
-        }
-    };
-
-    const handleCheckAnswer = () => {
-        if (selectedOptions.length === 0) return;
-
-        // Sort logic to make sure arrays match regardless of selection order
-        const selectedSorted = [...selectedOptions].sort();
-        const correctSorted = [...currentQuestion.correctAnswers].sort();
-
-        const isCorrect =
-            selectedSorted.length === correctSorted.length &&
-            selectedSorted.every((val, idx) => val === correctSorted[idx]);
-
-        setAnswersStatus((prev) => ({
-            ...prev,
-            [currentQuestion.id]: isCorrect
-        }));
-
-        setIsRevealed(true);
-    };
-
-    const handleNextQuestion = () => {
-        if (currentIndex < questions.length - 1) {
-            setCurrentIndex(currentIndex + 1);
-            setSelectedOptions([]);
-            setIsRevealed(mode === 'review');
-        } else {
-            handleFinishExam();
-        }
-    };
-
-    const handleFinishExam = () => {
-        if (mode === 'review') {
-            // Dry mode: do not alter stats, just go back to the dashboard
-            router.replace('/(tabs)');
-            return;
-        }
-
-        const correctIds: string[] = [];
-        const incorrectIds: string[] = [];
-
-        questions.forEach((q) => {
-            // If true, it was correct. Otherwise incorrect (or skipped, but we force answer here).
-            if (answersStatus[q.id]) {
-                correctIds.push(q.id);
-            } else {
-                incorrectIds.push(q.id);
-            }
-        });
-
-        recordExamResult(correctIds, incorrectIds);
-
-        // Navigate to the result summary
-        router.replace({
-            pathname: '/result',
-            params: {
-                score: correctIds.length,
-                total: questions.length
-            }
-        });
-    };
-
     const getOptionStyle = (optionId: string) => {
         const isSelected = selectedOptions.includes(optionId);
-        if (!isRevealed) {
-            return isSelected ? styles.optionSelected : styles.optionDefault;
-        }
-
-        const isCorrectAnswer = currentQuestion.correctAnswers.includes(optionId);
-
-        if (isCorrectAnswer) {
-            return styles.optionCorrect;
-        }
-        if (isSelected && !isCorrectAnswer) {
-            return styles.optionIncorrect;
-        }
-        return styles.optionDefault;
+        return isSelected ? styles.optionSelected : styles.optionDefault;
     };
 
     const handleQuit = () => {
@@ -177,48 +108,31 @@ export default function ExamScreen() {
                         <TouchableOpacity
                             key={option.id}
                             style={[styles.optionButton, getOptionStyle(option.id)]}
-                            onPress={() => toggleOption(option.id)}
+                            onPress={() => toggleOption(option.id, isMultipleChoice)}
                             activeOpacity={0.7}
-                            disabled={isRevealed}
                         >
                             <Text style={[
                                 styles.optionText,
-                                selectedOptions.includes(option.id) && !isRevealed ? styles.optionTextSelected : null
+                                selectedOptions.includes(option.id) ? styles.optionTextSelected : null
                             ]}>
                                 {option.text}
                             </Text>
                         </TouchableOpacity>
                     ))}
                 </View>
-
-                {isRevealed && (
-                    <View style={styles.explanationBox}>
-                        <Text style={styles.explanationTitle}>Explanation</Text>
-                        <Text style={styles.explanationText}>{currentQuestion.explanation}</Text>
-                    </View>
-                )}
             </ScrollView>
 
             {/* Bottom Action Area */}
             <View style={styles.bottomBar}>
-                {!isRevealed ? (
-                    <TouchableOpacity
-                        style={[styles.actionButton, selectedOptions.length === 0 && styles.actionButtonDisabled]}
-                        onPress={handleCheckAnswer}
-                        disabled={selectedOptions.length === 0}
-                    >
-                        <Text style={styles.actionButtonText}>Check Answer</Text>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={handleNextQuestion}
-                    >
-                        <Text style={styles.actionButtonText}>
-                            {currentIndex < questions.length - 1 ? 'Next Question' : 'Finish Exam'}
-                        </Text>
-                    </TouchableOpacity>
-                )}
+                <TouchableOpacity
+                    style={[styles.actionButton, selectedOptions.length === 0 && styles.actionButtonDisabled]}
+                    onPress={nextQuestion}
+                    disabled={selectedOptions.length === 0}
+                >
+                    <Text style={styles.actionButtonText}>
+                        {currentIndex < questions.length - 1 ? 'Next Question' : 'Finish Exam'}
+                    </Text>
+                </TouchableOpacity>
             </View>
         </SafeAreaView>
     );
@@ -290,39 +204,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#2C5282',
         borderColor: '#63B3ED',
     },
-    optionCorrect: {
-        backgroundColor: '#276749',
-        borderColor: '#68D391',
-    },
-    optionIncorrect: {
-        backgroundColor: '#742A2A',
-        borderColor: '#FC8181',
-    },
     optionText: {
         fontSize: 16,
         color: '#E2E8F0',
         lineHeight: 22,
     },
     optionTextSelected: {
-        color: '#EBF8FF', // Highlighted text when selected in dark mode
+        color: '#EBF8FF',
         fontWeight: '600',
-    },
-    explanationBox: {
-        marginTop: 24,
-        padding: 16,
-        backgroundColor: '#1E1E1E',
-        borderRadius: 12,
-        borderLeftWidth: 4,
-        borderLeftColor: '#63B3ED',
-    },
-    explanationTitle: {
-        fontWeight: '700',
-        color: '#E2E8F0',
-        marginBottom: 8,
-    },
-    explanationText: {
-        color: '#CBD5E0',
-        lineHeight: 22,
     },
     bottomBar: {
         padding: 20,

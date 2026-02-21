@@ -1,34 +1,22 @@
+import { BankMasteryGauge } from '@/components/BankMasteryGauge';
 import questionBankData from '@/data/question_bank.json';
 import { useExamStore } from '@/stores/useExamStore';
 import { useRouter } from 'expo-router';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, G, Text as SvgText } from 'react-native-svg';
 
 const TOTAL_QUESTION_BANK_SIZE = questionBankData.length;
 
 export default function HomeScreen() {
   const router = useRouter();
   const {
-    totalAttempts,
-    totalCorrectAnswers,
     incorrectQuestionIds,
     correctQuestionIds,
     resetStats
   } = useExamStore();
 
-  const avgCorrect = totalAttempts > 0
-    ? (totalCorrectAnswers / totalAttempts).toFixed(1)
-    : 0;
-
-  const masteryPercentage = (correctQuestionIds.length / TOTAL_QUESTION_BANK_SIZE) * 100;
-  const displayPercentage = masteryPercentage.toFixed(1);
-
-  // SVG Gauge Variables
-  const radius = 60;
-  const strokeWidth = 12;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (masteryPercentage / 100) * circumference;
+  const correctCount = correctQuestionIds.length;
+  const incorrectCount = incorrectQuestionIds.length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -36,64 +24,11 @@ export default function HomeScreen() {
       <Text style={styles.subtitle}>Study Guide & Exam</Text>
 
       <View style={styles.statsCard}>
-        <Text style={styles.statsTitle}>Bank Mastery</Text>
-
-        <View style={styles.gaugeContainer}>
-          <Svg height="160" width="160" viewBox="0 0 160 160">
-            <G rotation="-90" origin="80, 80">
-              {/* Background Circle */}
-              <Circle
-                cx="80"
-                cy="80"
-                r={radius}
-                stroke="#333333"
-                strokeWidth={strokeWidth}
-                fill="transparent"
-              />
-              {/* Foreground Progress Circle */}
-              <Circle
-                cx="80"
-                cy="80"
-                r={radius}
-                stroke="#63B3ED"
-                strokeWidth={strokeWidth}
-                fill="transparent"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-              />
-            </G>
-            {/* Center Text */}
-            <SvgText
-              x="80"
-              y="80"
-              textAnchor="middle"
-              alignmentBaseline="central"
-              fontSize="24"
-              fontWeight="bold"
-              fill="#E2E8F0"
-            >
-              {`${displayPercentage}%`}
-            </SvgText>
-          </Svg>
-        </View>
-
-        <View style={styles.statsDivider} />
-
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Exam Attempts:</Text>
-          <Text style={styles.statValue}>{totalAttempts}</Text>
-        </View>
-
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Avg Correct per Attempt:</Text>
-          <Text style={styles.statValue}>{avgCorrect} / 24</Text>
-        </View>
-
-        <View style={styles.statRow}>
-          <Text style={styles.statLabel}>Incorrect Answers (Unique):</Text>
-          <Text style={styles.statValue}>{incorrectQuestionIds.length}</Text>
-        </View>
+        <BankMasteryGauge
+          correctCount={correctCount}
+          incorrectCount={incorrectCount}
+          totalQuestions={TOTAL_QUESTION_BANK_SIZE}
+        />
       </View>
 
       <TouchableOpacity
@@ -107,7 +42,7 @@ export default function HomeScreen() {
       {incorrectQuestionIds.length > 0 && (
         <TouchableOpacity
           style={[styles.startButton, styles.reviewButton]}
-          onPress={() => router.push({ pathname: '/exam', params: { mode: 'review' } })}
+          onPress={() => router.push('/review')}
           activeOpacity={0.8}
         >
           <Text style={styles.startButtonText}>Review Incorrect Questions</Text>
@@ -161,11 +96,6 @@ const styles = StyleSheet.create({
     color: '#E2E8F0',
     marginBottom: 16,
     textAlign: 'center',
-  },
-  gaugeContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
   },
   statsDivider: {
     height: 1,
