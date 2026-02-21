@@ -23,48 +23,63 @@ function shuffle<T>(array: T[]): T[] {
     return newArray;
 }
 
+/**
+ * Returns true if the question is a True/False or Yes/No question,
+ * in which case we should probably NOT shuffle the options to keep them consistent.
+ */
+function isBooleanQuestion(question: Question): boolean {
+    const texts = question.options.map(opt => opt.text.trim().toLowerCase());
+    const booleanSets = [
+        ['true', 'false'],
+        ['yes', 'no']
+    ];
+
+    return booleanSets.some(set =>
+        texts.length === set.length && texts.every(t => set.includes(t))
+    );
+}
+
 interface ExamConfig {
-    incorrectIds: string[];
-    correctIds: string[];
-    onlyIncorrect?: boolean;
+    incorrectIds?: string[];
+    correctIds?: string[];
 }
 
 /**
  * Returns a random sample of `count` questions from the question bank.
+ * Prioritizes: Previously Incorrect > Unseen > Mastered
  */
-export function getRandomExamQuestions(count: number = AppConfig.EXAM_QUESTION_COUNT, config?: ExamConfig): Question[] {
-    if (config?.onlyIncorrect) {
-        let pool = questionBank.filter(q => config.incorrectIds.includes(q.id));
-        const shuffled = shuffle(pool);
-        const selected = shuffled.slice(0, count);
-        return selected.map(q => ({ ...q, options: shuffle(q.options) }));
-    }
+export function getRandomExamQuestions(
+    count: number = AppConfig.EXAM_QUESTION_COUNT,
+    config: ExamConfig = {}
+): Question[] {
+    const { incorrectIds = [], correctIds = [] } = config;
 
-    if (config) {
-        // Group A: Incorrect previously, but not yet mastered
-        const groupA = questionBank.filter(q => config.incorrectIds.includes(q.id) && !config.correctIds.includes(q.id));
-        // Group B: Unseen
-        const groupB = questionBank.filter(q => !config.incorrectIds.includes(q.id) && !config.correctIds.includes(q.id));
-        // Group C: Previously answered correctly
-        const groupC = questionBank.filter(q => config.correctIds.includes(q.id));
+    // Categorize questions into 3 priority groups
+    const previouslyIncorrectQuestions = questionBank.filter(q =>
+        incorrectIds.includes(q.id) && !correctIds.includes(q.id)
+    );
+    const unseenQuestions = questionBank.filter(q =>
+        !incorrectIds.includes(q.id) && !correctIds.includes(q.id)
+    );
+    const masteredQuestions = questionBank.filter(q =>
+        correctIds.includes(q.id)
+    );
 
-        const shuffledA = shuffle(groupA);
-        const shuffledB = shuffle(groupB);
-        const shuffledC = shuffle(groupC);
+    // Shuffle each group internally
+    const shuffledIncorrect = shuffle(previouslyIncorrectQuestions);
+    const shuffledUnseen = shuffle(unseenQuestions);
+    const shuffledMastered = shuffle(masteredQuestions);
 
-        const combined = [...shuffledA, ...shuffledB, ...shuffledC];
-        const selected = combined.slice(0, count);
+    // Combine in priority order and take the requested count
+    const combined = [...shuffledIncorrect, ...shuffledUnseen, ...shuffledMastered];
+    const selected = combined.slice(0, count);
 
-        // Shuffle the selected array so the groups are randomly mixed in the actual exam
-        const finalQuestions = shuffle(selected);
-        return finalQuestions.map(q => ({ ...q, options: shuffle(q.options) }));
-    }
+    // Final shuffle so the groups are randomly mixed in the actual exam
+    const finalQuestions = shuffle(selected);
 
-    const shuffled = shuffle(questionBank);
-    const selected = shuffled.slice(0, count);
-
-    return selected.map(q => ({
+    // Return questions with correctly handled option shuffling
+    return finalQuestions.map(q => ({
         ...q,
-        options: shuffle(q.options)
+        options: isBooleanQuestion(q) ? q.options : shuffle(q.options)
     }));
 }
