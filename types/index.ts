@@ -15,9 +15,4 @@ export interface Question {
 
 export type QuestionBank = Question[];
 
-export interface ExamStatistics {
-    totalAttempts: number;
-    totalQuestionsAnswered: number;
-    totalCorrectAnswers: number;
-    incorrectQuestionIds: string[];
-}
+

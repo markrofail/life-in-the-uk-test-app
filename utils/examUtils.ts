@@ -15,7 +15,7 @@ function shuffle<T>(array: T[]): T[] {
     return newArray;
 }
 
-export interface ExamConfig {
+interface ExamConfig {
     incorrectIds: string[];
     correctIds: string[];
     onlyIncorrect?: boolean;
