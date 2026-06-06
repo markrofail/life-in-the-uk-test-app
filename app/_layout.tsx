@@ -23,6 +23,7 @@ export default function RootLayout() {
         <Stack.Screen name="exam" options={{ headerBackVisible: false }} />
         <Stack.Screen name="result" options={{ title: 'Results', headerBackVisible: false }} />
         <Stack.Screen name="review" options={{ title: 'Review Incorrect Questions', }} />
+        <Stack.Screen name="endless" options={{ headerBackVisible: false }} />
       </Stack>
       <StatusBar style="light" />
     </ThemeProvider>
