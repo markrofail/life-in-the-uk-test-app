@@ -4,6 +4,7 @@ import { Colors } from '@/constants/theme';
 import { useExamSession } from '@/hooks/useExamSession';
 import { useExamStore } from '@/stores/useExamStore';
 import { getRandomExamQuestions } from '@/utils/examUtils';
+import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -76,8 +77,8 @@ export default function ExamScreen() {
                 options={{
                     title: `Question ${currentIndex + 1} of ${questions.length}`,
                     headerLeft: () => (
-                        <TouchableOpacity onPress={handleQuit}>
-                            <Text style={styles.quitText}>Quit</Text>
+                        <TouchableOpacity onPress={handleQuit} style={{ paddingLeft: 8 }}>
+                            <Ionicons name="close" size={28} color={Colors.error} />
                         </TouchableOpacity>
                     ),
                 }}
@@ -117,11 +118,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: Colors.background,
-    },
-    quitText: {
-        color: Colors.error,
-        fontSize: 16,
-        fontWeight: '600',
     },
     scrollContent: {
         padding: 24,

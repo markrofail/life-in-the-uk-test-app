@@ -2,7 +2,7 @@ import { PieChart } from '@/components/PieChart';
 import { Colors } from '@/constants/theme';
 import { useExamStore } from '@/stores/useExamStore';
 import { getTotalQuestionCount } from '@/utils/examUtils';
-import { useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,7 +10,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const TOTAL_QUESTION_BANK_SIZE = getTotalQuestionCount();
 
 export default function HomeScreen() {
-  const router = useRouter();
   const incorrectQuestionIds = useExamStore((state) => state.incorrectQuestionIds);
   const correctQuestionIds = useExamStore((state) => state.correctQuestionIds);
   const resetStats = useExamStore((state) => state.resetStats);
@@ -41,22 +40,18 @@ export default function HomeScreen() {
         />
       </View>
 
-      <TouchableOpacity
-        style={styles.startButton}
-        onPress={() => router.push('/exam')}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.startButtonText}>Take Practice Exam</Text>
-      </TouchableOpacity>
+      <Link href="/exam" asChild>
+        <TouchableOpacity style={styles.startButton} activeOpacity={0.8}>
+          <Text style={styles.startButtonText}>Take Practice Exam</Text>
+        </TouchableOpacity>
+      </Link>
 
       {incorrectQuestionIds.length > 0 && (
-        <TouchableOpacity
-          style={[styles.startButton, styles.reviewButton]}
-          onPress={() => router.push('/review')}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.startButtonText}>Review Incorrect Questions</Text>
-        </TouchableOpacity>
+        <Link href="/review" asChild>
+          <TouchableOpacity style={[styles.startButton, styles.reviewButton]} activeOpacity={0.8}>
+            <Text style={styles.startButtonText}>Review Incorrect Questions</Text>
+          </TouchableOpacity>
+        </Link>
       )}
 
       <TouchableOpacity

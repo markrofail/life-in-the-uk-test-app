@@ -15,13 +15,14 @@ export default function RootLayout() {
           headerTintColor: Colors.textMain,
           headerTitleStyle: { fontWeight: '700' },
           headerShadowVisible: false,
-          headerBackVisible: false,
+          headerBackVisible: true,
+          headerBackButtonDisplayMode: 'minimal',
         }}
       >
         <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="exam" options={{ headerShown: true, headerBackVisible: false }} />
+        <Stack.Screen name="exam" options={{ headerBackVisible: false }} />
         <Stack.Screen name="result" options={{ title: 'Results', headerBackVisible: false }} />
-        <Stack.Screen name="review" options={{ title: 'Review Incorrect Questions', headerBackVisible: true, headerBackTitle: 'Back' }} />
+        <Stack.Screen name="review" options={{ title: 'Review Incorrect Questions', }} />
       </Stack>
       <StatusBar style="light" />
     </ThemeProvider>

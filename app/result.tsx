@@ -4,7 +4,7 @@ import { AppConfig } from '@/constants/config';
 import { Colors } from '@/constants/theme';
 import { useExamStore } from '@/stores/useExamStore';
 import { getQuestionsByIds } from '@/utils/examUtils';
-import { useRouter } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -62,13 +62,14 @@ export default function ResultScreen() {
     );
 
     const footerNode = (
-        <TouchableOpacity
-            style={styles.homeButton}
-            onPress={() => router.replace('/')}
-            activeOpacity={0.8}
-        >
-            <Text style={styles.homeButtonText}>Return to Dashboard</Text>
-        </TouchableOpacity>
+        <Link href="/" replace asChild>
+            <TouchableOpacity
+                style={styles.homeButton}
+                activeOpacity={0.8}
+            >
+                <Text style={styles.homeButtonText}>Return to Dashboard</Text>
+            </TouchableOpacity>
+        </Link>
     );
 
     return (
