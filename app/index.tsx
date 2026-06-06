@@ -19,9 +19,9 @@ export default function HomeScreen() {
   const unansweredCount = TOTAL_QUESTION_BANK_SIZE - correctCount - incorrectCount;
 
   const pieChartData = useMemo(() => [
-    { label: 'Correct', value: correctCount, color: '#68D391' },
-    { label: 'Incorrect', value: incorrectCount, color: '#FC8181' },
-    { label: 'Unseen', value: unansweredCount, color: '#333333' }
+    { label: 'Correct', value: correctCount, color: Colors.success },
+    { label: 'Incorrect', value: incorrectCount, color: Colors.error },
+    { label: 'Unseen', value: unansweredCount, color: Colors.border }
   ], [correctCount, incorrectCount, unansweredCount]);
 
   return (
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   endlessButton: {
-    backgroundColor: '#2C7A7B',
+    backgroundColor: Colors.secondary,
   },
   modeButtonText: {
     color: '#FFFFFF',
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   reviewButton: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: 'rgba(252, 129, 129, 0.5)',
+    borderColor: Colors.errorSubtle,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
