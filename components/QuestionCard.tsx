@@ -121,39 +121,39 @@ const styles = StyleSheet.create({
     },
     optionCorrect: {
         backgroundColor: 'rgba(104, 211, 145, 0.15)',
-        borderColor: '#68D391',
+        borderColor: Colors.success,
     },
     optionWrong: {
         backgroundColor: 'rgba(252, 129, 129, 0.15)',
-        borderColor: '#FC8181',
+        borderColor: Colors.error,
     },
     optionTextCorrect: {
-        color: '#68D391',
+        color: Colors.success,
         fontWeight: '600',
     },
     optionTextWrong: {
-        color: '#FC8181',
+        color: Colors.error,
         fontWeight: '600',
     },
     explanationContainer: {
         marginTop: 24,
         padding: 16,
-        backgroundColor: '#1E1E1E',
+        backgroundColor: Colors.cardBackground,
         borderRadius: 12,
         borderLeftWidth: 3,
-        borderLeftColor: '#3182CE',
+        borderLeftColor: Colors.primary,
     },
     explanationLabel: {
         fontSize: 12,
         fontWeight: '700',
-        color: '#63B3ED',
+        color: Colors.primaryLight,
         marginBottom: 6,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
     },
     explanationText: {
         fontSize: 14,
-        color: '#A0AEC0',
+        color: Colors.textMuted,
         lineHeight: 22,
     },
 });
