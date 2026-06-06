@@ -2,7 +2,7 @@ import { PieChart } from '@/components/PieChart';
 import { Colors } from '@/constants/theme';
 import { useExamStore } from '@/stores/useExamStore';
 import { getTotalQuestionCount } from '@/utils/examUtils';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,6 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 const TOTAL_QUESTION_BANK_SIZE = getTotalQuestionCount();
 
 export default function HomeScreen() {
+  const router = useRouter();
   const incorrectQuestionIds = useExamStore((state) => state.incorrectQuestionIds);
   const correctQuestionIds = useExamStore((state) => state.correctQuestionIds);
   const resetStats = useExamStore((state) => state.resetStats);
@@ -41,21 +42,13 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.modeButtonsRow}>
-        <View style={styles.modeButtonWrapper}>
-          <Link href="/exam" asChild>
-            <TouchableOpacity style={[styles.modeButton, styles.examButton]} activeOpacity={0.8}>
-              <Text style={styles.modeButtonText}>Practice Exam</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
+        <TouchableOpacity style={[styles.modeButton, styles.examButton]} activeOpacity={0.8} onPress={() => router.push('/exam')}>
+          <Text style={styles.modeButtonText}>Practice Exam</Text>
+        </TouchableOpacity>
 
-        <View style={styles.modeButtonWrapper}>
-          <Link href="/endless" asChild>
-            <TouchableOpacity style={[styles.modeButton, styles.endlessButton]} activeOpacity={0.8}>
-              <Text style={styles.modeButtonText}>Endless Mode</Text>
-            </TouchableOpacity>
-          </Link>
-        </View>
+        <TouchableOpacity style={[styles.modeButton, styles.endlessButton]} activeOpacity={0.8} onPress={() => router.push('/endless')}>
+          <Text style={styles.modeButtonText}>Endless Mode</Text>
+        </TouchableOpacity>
       </View>
 
       {incorrectQuestionIds.length > 0 && (
@@ -139,10 +132,8 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
-  modeButtonWrapper: {
-    flex: 1,
-  },
   modeButton: {
+    flex: 1,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
