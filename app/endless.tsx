@@ -27,12 +27,14 @@ export default function EndlessScreen() {
                 correctIds: correctQuestionIds,
             })
         );
+        // This effect runs only once on mount to start the endless session
     }, []);
 
     useEffect(() => {
         if (isFinished) {
             router.replace('/');
         }
+        // router is stable; navigate home once the session is complete
     }, [isFinished]);
 
     if (!currentQuestion || questions.length === 0) {
@@ -62,6 +64,7 @@ export default function EndlessScreen() {
         const isCorrect =
             selectedSorted.length === correctSorted.length &&
             selectedSorted.every((val, idx) => val === correctSorted[idx]);
+        // Commit result to store before dispatching SUBMIT so stats are persisted before reveal
         recordQuestionResult(currentQuestion.id, isCorrect);
         submitAnswer();
     };
