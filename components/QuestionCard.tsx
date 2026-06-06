@@ -7,14 +7,39 @@ interface Props {
     question: Question;
     selectedOptions: string[];
     onOptionToggle: (optionId: string, isMultipleChoice: boolean) => void;
+    revealed?: boolean;
+    explanation?: string;
 }
 
-export const QuestionCard = memo(function QuestionCard({ question, selectedOptions, onOptionToggle }: Props) {
+export const QuestionCard = memo(function QuestionCard({
+    question,
+    selectedOptions,
+    onOptionToggle,
+    revealed = false,
+    explanation,
+}: Props) {
     const isMultipleChoice = question.correctAnswers.length > 1;
 
     const getOptionStyle = (optionId: string) => {
+        if (revealed) {
+            const isCorrect = question.correctAnswers.includes(optionId);
+            const isSelected = selectedOptions.includes(optionId);
+            if (isCorrect) return styles.optionCorrect;
+            if (isSelected) return styles.optionWrong;
+            return styles.optionDefault;
+        }
+        return selectedOptions.includes(optionId) ? styles.optionSelected : styles.optionDefault;
+    };
+
+    const getOptionTextStyle = (optionId: string) => {
+        if (!revealed) {
+            return selectedOptions.includes(optionId) ? styles.optionTextSelected : null;
+        }
+        const isCorrect = question.correctAnswers.includes(optionId);
         const isSelected = selectedOptions.includes(optionId);
-        return isSelected ? styles.optionSelected : styles.optionDefault;
+        if (isCorrect) return styles.optionTextCorrect;
+        if (isSelected) return styles.optionTextWrong;
+        return null;
     };
 
     return (
@@ -34,16 +59,21 @@ export const QuestionCard = memo(function QuestionCard({ question, selectedOptio
                         style={[styles.optionButton, getOptionStyle(option.id)]}
                         onPress={() => onOptionToggle(option.id, isMultipleChoice)}
                         activeOpacity={0.7}
+                        disabled={revealed}
                     >
-                        <Text style={[
-                            styles.optionText,
-                            selectedOptions.includes(option.id) ? styles.optionTextSelected : null
-                        ]}>
+                        <Text style={[styles.optionText, getOptionTextStyle(option.id)]}>
                             {option.text}
                         </Text>
                     </TouchableOpacity>
                 ))}
             </View>
+
+            {revealed && explanation && (
+                <View style={styles.explanationContainer}>
+                    <Text style={styles.explanationLabel}>Explanation</Text>
+                    <Text style={styles.explanationText}>{explanation}</Text>
+                </View>
+            )}
         </View>
     );
 });
@@ -88,5 +118,42 @@ const styles = StyleSheet.create({
     optionTextSelected: {
         color: Colors.textSelect,
         fontWeight: '600',
+    },
+    optionCorrect: {
+        backgroundColor: 'rgba(104, 211, 145, 0.15)',
+        borderColor: '#68D391',
+    },
+    optionWrong: {
+        backgroundColor: 'rgba(252, 129, 129, 0.15)',
+        borderColor: '#FC8181',
+    },
+    optionTextCorrect: {
+        color: '#68D391',
+        fontWeight: '600',
+    },
+    optionTextWrong: {
+        color: '#FC8181',
+        fontWeight: '600',
+    },
+    explanationContainer: {
+        marginTop: 24,
+        padding: 16,
+        backgroundColor: '#1E1E1E',
+        borderRadius: 12,
+        borderLeftWidth: 3,
+        borderLeftColor: '#3182CE',
+    },
+    explanationLabel: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#63B3ED',
+        marginBottom: 6,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    explanationText: {
+        fontSize: 14,
+        color: '#A0AEC0',
+        lineHeight: 22,
     },
 });
