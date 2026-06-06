@@ -41,17 +41,21 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.modeButtonsRow}>
-        <Link href="/exam" asChild>
-          <TouchableOpacity style={[styles.modeButton, styles.examButton]} activeOpacity={0.8}>
-            <Text style={styles.modeButtonText}>Practice Exam</Text>
-          </TouchableOpacity>
-        </Link>
+        <View style={styles.modeButtonWrapper}>
+          <Link href="/exam" asChild>
+            <TouchableOpacity style={[styles.modeButton, styles.examButton]} activeOpacity={0.8}>
+              <Text style={styles.modeButtonText}>Practice Exam</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
 
-        <Link href="/endless" asChild>
-          <TouchableOpacity style={[styles.modeButton, styles.endlessButton]} activeOpacity={0.8}>
-            <Text style={styles.modeButtonText}>Endless Mode</Text>
-          </TouchableOpacity>
-        </Link>
+        <View style={styles.modeButtonWrapper}>
+          <Link href="/endless" asChild>
+            <TouchableOpacity style={[styles.modeButton, styles.endlessButton]} activeOpacity={0.8}>
+              <Text style={styles.modeButtonText}>Endless Mode</Text>
+            </TouchableOpacity>
+          </Link>
+        </View>
       </View>
 
       {incorrectQuestionIds.length > 0 && (
@@ -135,8 +139,10 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
-  modeButton: {
+  modeButtonWrapper: {
     flex: 1,
+  },
+  modeButton: {
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
