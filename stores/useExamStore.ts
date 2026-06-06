@@ -30,6 +30,7 @@ interface ExamStoreState {
         incorrectQuestions: string[]
     ) => void;
     resetStats: () => void;
+    recordQuestionResult: (id: string, isCorrect: boolean) => void;
 }
 
 export const useExamStore = create<ExamStoreState>()(
@@ -73,6 +74,23 @@ export const useExamStore = create<ExamStoreState>()(
                 incorrectQuestionIds: [],
                 correctQuestionIds: [],
                 lastExamResult: null,
+            }),
+
+            recordQuestionResult: (id, isCorrect) => set((state) => {
+                const newIncorrectSet = new Set(state.incorrectQuestionIds);
+                const newCorrectSet = new Set(state.correctQuestionIds);
+
+                if (isCorrect) {
+                    newCorrectSet.add(id);
+                    newIncorrectSet.delete(id);
+                } else {
+                    newIncorrectSet.add(id);
+                }
+
+                return {
+                    incorrectQuestionIds: Array.from(newIncorrectSet),
+                    correctQuestionIds: Array.from(newCorrectSet),
+                };
             })
         }),
         {
