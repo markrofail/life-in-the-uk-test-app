@@ -40,22 +40,24 @@ export default function HomeScreen() {
         />
       </View>
 
-      <Link href="/exam" asChild>
-        <TouchableOpacity style={styles.startButton} activeOpacity={0.8}>
-          <Text style={styles.startButtonText}>Take Practice Exam</Text>
-        </TouchableOpacity>
-      </Link>
+      <View style={styles.modeButtonsRow}>
+        <Link href="/exam" asChild>
+          <TouchableOpacity style={[styles.modeButton, styles.examButton]} activeOpacity={0.8}>
+            <Text style={styles.modeButtonText}>Practice Exam</Text>
+          </TouchableOpacity>
+        </Link>
 
-      <Link href="/endless" asChild>
-        <TouchableOpacity style={[styles.startButton, styles.endlessButton]} activeOpacity={0.8}>
-          <Text style={styles.startButtonText}>Endless Mode</Text>
-        </TouchableOpacity>
-      </Link>
+        <Link href="/endless" asChild>
+          <TouchableOpacity style={[styles.modeButton, styles.endlessButton]} activeOpacity={0.8}>
+            <Text style={styles.modeButtonText}>Endless Mode</Text>
+          </TouchableOpacity>
+        </Link>
+      </View>
 
       {incorrectQuestionIds.length > 0 && (
         <Link href="/review" asChild>
-          <TouchableOpacity style={[styles.startButton, styles.reviewButton]} activeOpacity={0.8}>
-            <Text style={styles.startButtonText}>Review Incorrect Questions</Text>
+          <TouchableOpacity style={styles.reviewButton} activeOpacity={0.8}>
+            <Text style={styles.reviewButtonText}>Review Incorrect Questions</Text>
           </TouchableOpacity>
         </Link>
       )}
@@ -128,8 +130,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: Colors.primaryLight,
   },
-  startButton: {
-    backgroundColor: Colors.primary,
+  modeButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 16,
+  },
+  modeButton: {
+    flex: 1,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -138,16 +145,29 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
-    marginBottom: 16,
   },
-  reviewButton: {
-    backgroundColor: '#9B2C2C', // Used specifically here
+  examButton: {
+    backgroundColor: Colors.primary,
   },
   endlessButton: {
-    backgroundColor: '#2D3748',
+    backgroundColor: '#2C7A7B',
   },
-  startButtonText: {
+  modeButtonText: {
     color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  reviewButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: 'rgba(252, 129, 129, 0.5)',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  reviewButtonText: {
+    color: Colors.error,
     fontSize: 18,
     fontWeight: '700',
   },
