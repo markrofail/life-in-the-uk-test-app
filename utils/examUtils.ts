@@ -83,3 +83,13 @@ export function getRandomExamQuestions(
         options: isBooleanQuestion(q) ? q.options : shuffle(q.options)
     }));
 }
+
+/**
+ * Returns true if the selected option IDs exactly match the correct answers for a question.
+ */
+export function isAnswerCorrect(correctAnswers: string[], selectedOptions: string[]): boolean {
+    if (selectedOptions.length !== correctAnswers.length) return false;
+    const selectedSorted = [...selectedOptions].sort();
+    const correctSorted = [...correctAnswers].sort();
+    return selectedSorted.every((val, idx) => val === correctSorted[idx]);
+}

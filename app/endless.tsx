@@ -2,7 +2,7 @@ import { QuestionCard } from '@/components/QuestionCard';
 import { Colors } from '@/constants/theme';
 import { useEndlessSession } from '@/hooks/useEndlessSession';
 import { useExamStore } from '@/stores/useExamStore';
-import { getRandomExamQuestions, getTotalQuestionCount } from '@/utils/examUtils';
+import { getRandomExamQuestions, getTotalQuestionCount, isAnswerCorrect } from '@/utils/examUtils';
 import { Ionicons } from '@expo/vector-icons';
 import { Stack, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
@@ -37,7 +37,7 @@ export default function EndlessScreen() {
         // router is stable; navigate home once the session is complete
     }, [isFinished]);
 
-    if (!currentQuestion || questions.length === 0) {
+    if (!currentQuestion) {
         return (
             <SafeAreaView style={styles.centerContainer} edges={['bottom', 'left', 'right']}>
                 <Stack.Screen options={{ title: 'Loading...' }} />
@@ -59,11 +59,7 @@ export default function EndlessScreen() {
 
     const handleSubmit = () => {
         if (!currentQuestion || selectedOptions.length === 0) return;
-        const selectedSorted = [...selectedOptions].sort();
-        const correctSorted = [...currentQuestion.correctAnswers].sort();
-        const isCorrect =
-            selectedSorted.length === correctSorted.length &&
-            selectedSorted.every((val, idx) => val === correctSorted[idx]);
+        const isCorrect = isAnswerCorrect(currentQuestion.correctAnswers, selectedOptions);
         // Commit result to store before dispatching SUBMIT so stats are persisted before reveal
         recordQuestionResult(currentQuestion.id, isCorrect);
         submitAnswer();

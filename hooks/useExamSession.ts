@@ -1,4 +1,5 @@
 import { Question } from '@/types';
+import { isAnswerCorrect } from '@/utils/examUtils';
 import { useCallback, useReducer } from 'react';
 
 // Define the state shape for the exam session
@@ -58,12 +59,7 @@ function examSessionReducer(state: ExamSessionState, action: ExamSessionAction):
             if (state.selectedOptions.length === 0) return state; // Prevent advancing without answering
 
             const currentQuestion = state.questions[state.currentIndex];
-            const selectedSorted = [...state.selectedOptions].sort();
-            const correctSorted = [...currentQuestion.correctAnswers].sort();
-
-            const isCorrect =
-                selectedSorted.length === correctSorted.length &&
-                selectedSorted.every((val, idx) => val === correctSorted[idx]);
+            const isCorrect = isAnswerCorrect(currentQuestion.correctAnswers, state.selectedOptions);
 
             const newCorrectIds = isCorrect ? [...state.currentCorrectIds, currentQuestion.id] : state.currentCorrectIds;
             const newIncorrectIds = !isCorrect ? [...state.currentIncorrectIds, currentQuestion.id] : state.currentIncorrectIds;
