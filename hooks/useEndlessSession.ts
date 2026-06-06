@@ -38,19 +38,11 @@ function endlessSessionReducer(
 
             if (isMultipleChoice) {
                 if (state.selectedOptions.includes(optionId)) {
-                    return {
-                        ...state,
-                        selectedOptions: state.selectedOptions.filter((id) => id !== optionId),
-                    };
-                } else {
-                    return {
-                        ...state,
-                        selectedOptions: [...state.selectedOptions, optionId],
-                    };
+                    return { ...state, selectedOptions: state.selectedOptions.filter((id) => id !== optionId) };
                 }
-            } else {
-                return { ...state, selectedOptions: [optionId] };
+                return { ...state, selectedOptions: [...state.selectedOptions, optionId] };
             }
+            return { ...state, selectedOptions: [optionId] };
         }
 
         case 'SUBMIT': {
@@ -63,7 +55,7 @@ function endlessSessionReducer(
             const isLastQuestion = state.currentIndex >= state.questions.length - 1;
 
             if (isLastQuestion) {
-                return { ...state, isFinished: true };
+                return { ...state, isFinished: true, isRevealed: false };
             }
 
             return {
@@ -89,9 +81,8 @@ const initialState: EndlessSessionState = {
 };
 
 /**
- * Custom hook to abstract endless session logic using a reducer.
- * In an endless session, users answer questions one at a time, see the answer revealed,
- * then move to the next question. The session never ends unless explicitly finished.
+ * Custom hook to manage an endless quiz session.
+ * Works through all questions in order; the session ends when the user advances past the last question.
  */
 export function useEndlessSession() {
     const [state, dispatch] = useReducer(endlessSessionReducer, initialState);
