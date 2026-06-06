@@ -46,6 +46,12 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </Link>
 
+      <Link href="/endless" asChild>
+        <TouchableOpacity style={[styles.startButton, styles.endlessButton]} activeOpacity={0.8}>
+          <Text style={styles.startButtonText}>Endless Mode</Text>
+        </TouchableOpacity>
+      </Link>
+
       {incorrectQuestionIds.length > 0 && (
         <Link href="/review" asChild>
           <TouchableOpacity style={[styles.startButton, styles.reviewButton]} activeOpacity={0.8}>
@@ -136,6 +142,9 @@ const styles = StyleSheet.create({
   },
   reviewButton: {
     backgroundColor: '#9B2C2C', // Used specifically here
+  },
+  endlessButton: {
+    backgroundColor: '#2D3748',
   },
   startButtonText: {
     color: '#FFFFFF',
